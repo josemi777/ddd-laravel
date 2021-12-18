@@ -1,0 +1,8 @@
+<?php
+
+namespace App\src\Domain\{TYPEClass}{EXTRAnamespace};
+
+interface {OWNClass}
+{
+    //
+}

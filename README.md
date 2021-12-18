@@ -1,2 +1,2 @@
 # ddd-laravel
- CRUD and injections assistance for DDD to Laravel framework
+ CRUD assistant to create DDD classes and dependency injections

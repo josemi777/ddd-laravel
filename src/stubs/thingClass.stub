@@ -1,0 +1,11 @@
+<?php
+
+namespace App\src\Infrastructure\{TYPEClass}{EXTRAnamespace};
+
+use App\src\Domain\{TYPEClass}{EXTRAnamespace}\{OWNClass}Interface;
+{model}
+
+class {OWNClass} implements {OWNClass}Interface
+{
+    //
+}
