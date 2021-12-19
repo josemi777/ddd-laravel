@@ -44,34 +44,80 @@ class DumpDependeciesMakeCommand extends GeneratorCommand
             system('mkdir app/src/config');
             $this->files->put('APP/src/config/injection.yml','## injection of dependencies');
         }
-        $yamlContents = Yaml::parse(file_get_contents('App/src/config/injection.yml'));
-        $dependencies = null;  
-        
+        $yamlContents = Yaml::parseFile('App/src/config/injection.yml');
+
         if ($yamlContents) {
+
+            $yamlContents = $this->resolveDependencies($yamlContents);
             foreach($yamlContents as $injections) {
-                $class = $injections['class'];            
-                
-                foreach ($injections['subclass'] as $dependency) {
-                    $dependencies .= PHP_EOL.'new \\'.$dependency.'() ,'; 
+                $class = $injections['class'];
+                if (isset($injections['neededClass'])) {
+                    $this->content .= '$this->app->bind(\\'.$class.'::class, function ($app) {
+                                        return new \\'.$class.'('.$this->exploreNeededClasses($injections['neededClass']).');
+                                    });'.PHP_EOL;
                 }
-                $dependencies = substr($dependencies, 0, -1);
-                
-                $this->content .= '$this->app->bind(\\'.$class.'::class, function ($app) {
-                    return new \\'.$class.'('.PHP_EOL.$dependencies.');
-                });'.PHP_EOL . PHP_EOL;
-                
-                $dependencies = null;
+            }           
+        }
+        $path = $this->getPath(self::path.'AppServiceProvider');
+        $this->makeDirectory($path);
+        $this->files->put($path, $this->buildClass('AppServiceProvider'));
+        $this->line("<info>Injections updated succesfully</info>");
+    }
+
+    private function resolveDependencies($yaml)
+    {
+        foreach($yaml as $key => $injections) {
+            if (isset($injections['neededClass'])) {
+                foreach ($injections['neededClass'] as $key2 => $dependency) {
+                    if (strpos($dependency, '@') !== false) {
+                        $wholeDependency = str_replace('@', '', $dependency);
+                        $yaml[$key]['neededClass'][$key2] = $yaml[$wholeDependency];
+                    }
+                }
             }
         }
-        
-        $path = $this->getPath(self::path.'AppServiceProvider');
-        
-        $this->makeDirectory($path);
+        return $yaml;
+    }
 
-        $this->files->put($path, $this->buildClass('AppServiceProvider'));
+    private function exploreNeededClasses($injections)
+    {
+        $dependencies = '';
 
-        $this->line("<info>Injections updated succesfully</info>");
+        foreach($injections as $injection) {
 
+            if (isset($injection['class'])) {
+                $class = $injection['class'];
+
+                if (isset($injection['neededClass'])) {
+
+                    $dependencies .= 'new \\'.$class.'('.$this->exploreNeededClasses($injection['neededClass']).'),';
+                }
+                else {
+                    $dependencies .= 'new \\'.$class.'(),';
+                }
+            } else {
+                $dependencies .= 'new \\'.$injection.'(),';
+            }
+            /*$dependencies .= 'new \\'.$class.'(';
+
+              if (isset($injection['neededClass'])) {
+                    foreach ($injection['neededClass'] as $dependency) {
+
+                    if (is_array($dependency)) {
+                        $subdepends .= 'new \\'.$dependency['class'].'('.$this->exploreNeededClasses($dependency).') ,'; 
+                    }
+                    else {
+                        $subdepends .= 'new \\'.$dependency.'(),';
+                    }
+                }
+            }
+            $subdepends = substr($dependencies, 0, -1);
+
+            $dependencies .= $subdepends.')';*/
+            
+        }
+        $dependencies = substr($dependencies, 0, -1);
+        return $dependencies;
     }
     
     /**
