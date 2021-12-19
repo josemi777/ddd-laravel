@@ -10,6 +10,7 @@ class ArtisanServiceProvider extends ServiceProvider
         'DddLaravel\Commands\DumpDependeciesMakeCommand',
         'DddLaravel\Commands\InterfaceMakeCommand',
         'DddLaravel\Commands\ThingMakeCommand',
+        'DddLaravel\Commands\EndPointMakeCommand',
     ];
 
 
