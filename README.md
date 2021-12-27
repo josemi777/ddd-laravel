@@ -1,3 +1,5 @@
+![Logo DDD Laravel](/assets/images/ddd_laravel.png)
+
 # DDD Laravel - version (1.1.0)
  CRUD wizard for creating DDD classes and dependency injections.
 
