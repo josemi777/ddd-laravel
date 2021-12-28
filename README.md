@@ -1,6 +1,6 @@
 ![Logo DDD Laravel](/assets/images/ddd_laravel.png)
 
-# DDD Laravel - version (1.1.0)
+# DDD Laravel
  CRUD wizard for creating DDD classes and dependency injections.
 
 This library is designed to add CRUD commands of elements with DDD structure in your [Laravel](https://laravel.com/) project.
