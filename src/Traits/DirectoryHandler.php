@@ -14,7 +14,10 @@ trait DirectoryHandler {
     private function findSelected(string $find, array $route_tree)
     {  
     	$divide = explode('@', $find);
-    	$find = (count($divide)  > 0 ) ? $divide[1] : $find ;
+    	if (is_array($divide)) {
+
+            $find = (count($divide)  > 1 ) ? $divide[1] : $divide[0] ;
+        }
         foreach ($route_tree as $index => $element) {
 
             $to_find    = trim(str_replace(['/','.', ' ', "\e[90m", "\e[0m"], '' , $find));

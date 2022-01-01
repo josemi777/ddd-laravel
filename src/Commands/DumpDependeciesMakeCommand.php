@@ -49,12 +49,16 @@ class DumpDependeciesMakeCommand extends GeneratorCommand
         if ($yamlContents) {
 
             $yamlContents = $this->resolveDependencies($yamlContents, $yamlContents);
+            $first = true;
             foreach($yamlContents as $injections) {
                 $class = $injections['class'];
+                $add = ($first)? '' : "\t\t" ;
+                $first = false;
+                $init_level = "\t\t\t\t\t\t";
                 if (isset($injections['neededClass'])) {
-                    $this->content .= '$this->app->bind(\\'.$class.'::class, function ($app) {
-                                        return new \\'.$class.'('.$this->exploreNeededClasses($injections['neededClass'], $yamlContents).');
-                                    });'.PHP_EOL;
+                    $this->content .= $add.'$this->app->bind(\\'.$class.'::class, function ($app) {'."
+            return new \\".$class."(".$init_level.$this->exploreNeededClasses($injections['neededClass'], $yamlContents, $init_level).');
+        });'.PHP_EOL;
                 }
             }           
         }
@@ -98,13 +102,13 @@ class DumpDependeciesMakeCommand extends GeneratorCommand
      *
      * @param array $injections
      * @param array $whole_yaml
+     * @param string $level
      * 
      * @return string $dependencies
      */
-    private function exploreNeededClasses(array $injections, array $whole_yaml)
+    private function exploreNeededClasses(array $injections, array $whole_yaml, string $level = "")
     {
         $dependencies = '';
-        //$injections = $this->resolveDependencies($injections, $whole_yaml);
         foreach($injections as $injection) {
 
             if (isset($injection['class'])) {
@@ -112,13 +116,17 @@ class DumpDependeciesMakeCommand extends GeneratorCommand
 
                 if (isset($injection['neededClass'])) {
 
-                    $dependencies .= 'new \\'.$class.'('.$this->exploreNeededClasses($injection['neededClass'], $whole_yaml).'),';
+                    $dependencies .= "\n".$level."new \\".$class."(".$this->exploreNeededClasses($injection['neededClass'], $whole_yaml, $level."\t\t")."),";
                 }
                 else {
-                    $dependencies .= 'new \\'.$class.'(),';
+                    $dependencies .= "\n".$level."new \\".$class.'(),';
                 }
             } else {
-                $dependencies .= 'new \\'.$injection.'(),';
+                if (strpos($injection, '@') !== false) {
+                    $wholeDependency = str_replace('@', '', $injection);
+                    $injection = $whole_yaml[$wholeDependency]['class'];
+                }
+                $dependencies .= "\n".$level."new \\".$injection.'(),';
             }
         }
         $dependencies = substr($dependencies, 0, -1);
