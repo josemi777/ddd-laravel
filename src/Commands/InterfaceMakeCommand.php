@@ -51,7 +51,7 @@ class InterfaceMakeCommand extends GeneratorCommand
     /**
      * Execute the console command.
      *
-     * @return int
+     * @return int or message
      */
     public function handle()
     {
@@ -101,6 +101,7 @@ class InterfaceMakeCommand extends GeneratorCommand
      *
      * @param  string  $stub
      * @param  string  $name
+     * 
      * @return string
      */
     protected function replaceClass($stub, $name)
@@ -118,7 +119,6 @@ class InterfaceMakeCommand extends GeneratorCommand
     }
 
     /**
-     * 
      * Get the stub file for the generator.
      *
      * @return string

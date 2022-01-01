@@ -11,6 +11,8 @@ class ArtisanServiceProvider extends ServiceProvider
         'DddLaravel\Commands\InterfaceMakeCommand',
         'DddLaravel\Commands\ThingMakeCommand',
         'DddLaravel\Commands\EndPointMakeCommand',
+        'DddLaravel\Commands\InjectionsMakeCommand',
+        'DddLaravel\Commands\InjectionsUpdateCommand',
     ];
 
 
@@ -21,11 +23,7 @@ class ArtisanServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        /*if ($this->app->runningInConsole()) {
-            $this->commands([
-                TestmeCommand::class,
-            ]);
-        }*/
+        //
     }
 
     /**

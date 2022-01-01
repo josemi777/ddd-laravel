@@ -4,9 +4,12 @@ namespace DddLaravel\Commands;
 
 use Illuminate\Console\Command;
 use Storage;
+use DddLaravel\Traits\DirectoryHandler;
 
 class EndPointMakeCommand extends Command
-{ 
+{
+    use DirectoryHandler;
+
     protected $route_name   = null;
     protected $method       = 'post';
     protected $url          = null;
@@ -41,7 +44,7 @@ class EndPointMakeCommand extends Command
     /**
      * Execute the console command.
      *
-     * @return int
+     * @return int or message
      */
     public function handle()
     {
@@ -84,7 +87,7 @@ class EndPointMakeCommand extends Command
                 }
                 else {
 
-                    $key            = $this->findSelected($dire_to_search, $list['dirs']);
+                    $key  = $this->findSelected($dire_to_search, $list['dirs']);
 
                     $this->line("Seleccionado: ".$list['dirs'][$key]['normal_name']);
                     $this->newLine();
@@ -107,11 +110,15 @@ class EndPointMakeCommand extends Command
 
 
     /**
-     * Execute the console command.
+     * It generates all the endpoints of the list given by the $ dir array.
+     * Before starting the process, ask if we want to generate them with a
+     * different configuration than the one defined by default.
      *
+     * @var array $dirs
+     * 
      * @return int
      */
-    private function createMultipleEndPoints($dirs)
+    private function createMultipleEndPoints(array $dirs)
     {
         if ($this->confirm("<error> ¿Seguro que quieres crear todos los enpoints? </error>", true)) {
 
@@ -237,6 +244,7 @@ class EndPointMakeCommand extends Command
      * Check if plain text Laravel's route exists in selected Laravel's routes file.
      *
      * @var string $route
+     * 
      * @return boolean
      */
     private function allreadyExistRoute(string $route)
@@ -249,6 +257,7 @@ class EndPointMakeCommand extends Command
      * Insert plain text Laravel route on the selected file of Laravel's routes (web or api).
      *
      * @var string $route
+     * 
      * @return boolean
      */
     private function addToRoutes(string $route)
@@ -265,6 +274,7 @@ class EndPointMakeCommand extends Command
      *
      * @var string $url
      * @var (optional) string $controllerDir - default "null"
+     * 
      * @return array
      */
     private function generateEndpointInfoFromString(string $url, string $controllerDir=null)
@@ -291,6 +301,7 @@ class EndPointMakeCommand extends Command
      * Convert basic endpoint information to plain text formatted to Laravel route.
      *
      * @var array $data
+     * 
      * @return string
      */
     private function createEndPointText(array $data)
@@ -308,31 +319,10 @@ class EndPointMakeCommand extends Command
 
 
     /**
-     * Find route index in tree of routes, ignoring if string to compare is colored.
-     *
-     * @var string $find
-     * @var array $route_tree
-     * @return int
-     */
-    private function findSelected(string $find, array $route_tree)
-    {  
-        foreach ($route_tree as $index => $element) {
-
-            $to_find    = trim(str_replace(['/','.', ' ', "\e[90m", "\e[0m"], '' , $find));
-            $to_compare = trim(str_replace(['/','.', ' ', "\e[90m", "\e[0m"], '' , $element['dir']));
-
-            if ((string)$to_find == (string)$to_compare) {
-                return $index;
-            }
-        }
-        return false;
-    }
-
-
-    /**
      * List in console a tree of project Use cases to choose one.
      *
      * @var string $path
+     * 
      * @return array or error message
      */
     private function listPossibleUseCases(string $path)
@@ -358,90 +348,6 @@ class EndPointMakeCommand extends Command
         $this->newLine();
         $this->error(PHP_EOL.' Ya existen todos los endpoint posibles o no se ha creado ningún UseCase aún '.PHP_EOL);
         $this->newLine();
-    }
-
-
-    /**
-     * Method description.
-     *
-     * @var string $dir
-     * @return array
-     */
-    private function getDirContentsMulti(string $dir)
-    {
-        $files = scandir($dir);
-
-        foreach ($files as $key => $value) {
-
-            $path = realpath($dir . DIRECTORY_SEPARATOR . $value);
-
-            if (!is_dir($path)) {
-
-                $results[] = [
-                            'name'  => $this->getOnlyName($path),
-                            'dir'   => $path
-                            ];
-            }
-            else if ($value != "." && $value != "..") {
-                
-                $folder_name = $this->getOnlyName($path);
-                $results[]   = [
-                                'name'  => $folder_name,
-                                'dir'   => $path,
-                                'subs'  => $this->getDirContentsMulti($path)
-                                ];
-            }
-        }
-        return $results;
-    }
-
-
-    /**
-     * Method description.
-     *
-     * @var string
-     * @return array
-     */
-    private function getDirContentsSimple($dir, &$results = array(), $level = '')
-    {
-        $files = scandir($dir,1);
-        foreach ($files as $key => $value) {
-
-            $path = $dir . DIRECTORY_SEPARATOR . $value;
-
-            if (!is_dir($path)) {
-
-                $results[] = [
-                            'name'          => $level.$this->getOnlyName($path)." \e[90m @".$path." \e[0m",
-                            'normal_name'   => $this->getOnlyName($path),
-                            'dir'           => $path
-                            ];
-
-            } else if ($value != "." && $value != "..") {
-
-                $next_level = $level.'....';
-                $this->getDirContentsSimple($path, $results, $next_level);
-                $results[] = [
-                            'name'          => $level.'<comment>'.$this->getOnlyName($path).'</comment>'." \e[90m @".$path." \e[0m",
-                            'normal_name'   => $this->getOnlyName($path),
-                            'dir'           => $path
-                            ];
-            }
-        }
-        return $results;
-    }
-
-
-    /**
-     * Get last element from a string divided by "/".
-     *
-     * @var string $route
-     * @return string
-     */
-    private function getOnlyName(string $route)
-    {
-        $array = explode('/', $route);
-        return $array[count($array)-1];
     }
 
 }

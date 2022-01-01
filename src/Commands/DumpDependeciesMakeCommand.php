@@ -35,7 +35,7 @@ class DumpDependeciesMakeCommand extends GeneratorCommand
     /**
      * Execute the console command.
      *
-     * @return int
+     * @return int or message
      */
     public function handle()
     {
@@ -48,12 +48,12 @@ class DumpDependeciesMakeCommand extends GeneratorCommand
 
         if ($yamlContents) {
 
-            $yamlContents = $this->resolveDependencies($yamlContents);
+            $yamlContents = $this->resolveDependencies($yamlContents, $yamlContents);
             foreach($yamlContents as $injections) {
                 $class = $injections['class'];
                 if (isset($injections['neededClass'])) {
                     $this->content .= '$this->app->bind(\\'.$class.'::class, function ($app) {
-                                        return new \\'.$class.'('.$this->exploreNeededClasses($injections['neededClass']).');
+                                        return new \\'.$class.'('.$this->exploreNeededClasses($injections['neededClass'], $yamlContents).');
                                     });'.PHP_EOL;
                 }
             }           
@@ -61,17 +61,29 @@ class DumpDependeciesMakeCommand extends GeneratorCommand
         $path = $this->getPath(self::path.'AppServiceProvider');
         $this->makeDirectory($path);
         $this->files->put($path, $this->buildClass('AppServiceProvider'));
+        $this->newLine();
         $this->line("<info>Injections updated succesfully</info>");
+        $this->newLine();
     }
 
-    private function resolveDependencies($yaml)
+
+    /**
+     * Replace all declarations shortened with @ by the necessary constructor.
+     *
+     * @param array $yaml
+     * @param array $whole_yaml
+     * 
+     * @return array $yaml
+     */
+    private function resolveDependencies(array $yaml, array $whole_yaml)
     {
         foreach($yaml as $key => $injections) {
             if (isset($injections['neededClass'])) {
                 foreach ($injections['neededClass'] as $key2 => $dependency) {
+                    //$dependency = (!is_array($dependency))?: $dependency['class'] ;
                     if (strpos($dependency, '@') !== false) {
                         $wholeDependency = str_replace('@', '', $dependency);
-                        $yaml[$key]['neededClass'][$key2] = $yaml[$wholeDependency];
+                        $yaml[$key]['neededClass'][$key2] = $whole_yaml[$wholeDependency];
                     }
                 }
             }
@@ -79,10 +91,20 @@ class DumpDependeciesMakeCommand extends GeneratorCommand
         return $yaml;
     }
 
-    private function exploreNeededClasses($injections)
+
+    /**
+     * Traverses the entire dependency tree given by the array in the injects.yml
+     * file and generates a string to mount the necessary bind constructor for Laravel.
+     *
+     * @param array $injections
+     * @param array $whole_yaml
+     * 
+     * @return string $dependencies
+     */
+    private function exploreNeededClasses(array $injections, array $whole_yaml)
     {
         $dependencies = '';
-
+        //$injections = $this->resolveDependencies($injections, $whole_yaml);
         foreach($injections as $injection) {
 
             if (isset($injection['class'])) {
@@ -90,7 +112,7 @@ class DumpDependeciesMakeCommand extends GeneratorCommand
 
                 if (isset($injection['neededClass'])) {
 
-                    $dependencies .= 'new \\'.$class.'('.$this->exploreNeededClasses($injection['neededClass']).'),';
+                    $dependencies .= 'new \\'.$class.'('.$this->exploreNeededClasses($injection['neededClass'], $whole_yaml).'),';
                 }
                 else {
                     $dependencies .= 'new \\'.$class.'(),';
@@ -98,23 +120,6 @@ class DumpDependeciesMakeCommand extends GeneratorCommand
             } else {
                 $dependencies .= 'new \\'.$injection.'(),';
             }
-            /*$dependencies .= 'new \\'.$class.'(';
-
-              if (isset($injection['neededClass'])) {
-                    foreach ($injection['neededClass'] as $dependency) {
-
-                    if (is_array($dependency)) {
-                        $subdepends .= 'new \\'.$dependency['class'].'('.$this->exploreNeededClasses($dependency).') ,'; 
-                    }
-                    else {
-                        $subdepends .= 'new \\'.$dependency.'(),';
-                    }
-                }
-            }
-            $subdepends = substr($dependencies, 0, -1);
-
-            $dependencies .= $subdepends.')';*/
-            
         }
         $dependencies = substr($dependencies, 0, -1);
         return $dependencies;
@@ -136,6 +141,7 @@ class DumpDependeciesMakeCommand extends GeneratorCommand
      *
      * @param  string  $stub
      * @param  string  $name
+     * 
      * @return string
      */
     protected function replaceClass($stub, $name)

@@ -9,8 +9,10 @@ These commands are used by "php artisan" (you can get a list of them using `php 
 * make-ddd
   * [make-ddd:dump-dependencies](#dump-dependencies)
   * [make-ddd:end-point](#create-an-endpoint)
+  * [make-ddd:injection](#create-an-injection)
   * [make-ddd:interface](#create-an-interface)
   * [make-ddd:thing](#create-thing)
+  * [make-ddd:update-injections](#update-injections)
 
 
 ## Installation
@@ -68,6 +70,16 @@ The default values to create the endpoint are the following (you can change them
 - $function (execute): Endpoint function that will be used by default when calling the endpoint (this default value is "execute").
 - $file (web): For which Laravel routes file the endpoint will be created, the two options are "web" or "api".
 
+
+### Create an Injection
+```bash
+php artisan bashmake-ddd:injection
+```
+
+Just run this command and the wizard will guide you to create all the injections you need on any of the DDD elements that you have defined in the `src/Application`, `src/Domain` and `src/Infrastructure` directories of your Laravel project .
+> It is recommended that all the existing elements in your `src` directories have been generated with the [make-ddd:thing](#create-thing) command of this plugin.
+
+
 ### Create an Interface
 
 ```bash
@@ -84,3 +96,10 @@ php artisan make-ddd:thing
 
 With this command we can create several types of elements given in DDD architecture, which are `usecase`,` service`, `repository` and` model`.
 In the case of creating a service or a repository, an associated interface will be created automatically in the `src / Application` directory.
+
+
+### Update Injections
+```bash
+php artisan make-ddd:update-injections
+```
+Just run this command and the plugin will read all the classes in your `src` directory for constructor dependencies and insert the new dependencies into your project's `src/config/injection.yml` file, in the correct format.

@@ -59,7 +59,7 @@ class ThingMakeCommand extends GeneratorCommand
     /**
      * Execute the console command.
      *
-     * @return int
+     * @return int or message
      */
     public function handle()
     {
@@ -142,7 +142,6 @@ class ThingMakeCommand extends GeneratorCommand
     }
 
     /**
-     * 
      * Get the stub file for the generator.
      *
      * @return string
