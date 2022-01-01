@@ -103,3 +103,4 @@ In the case of creating a service or a repository, an associated interface will 
 php artisan make-ddd:update-injections
 ```
 Just run this command and the plugin will read all the classes in your `src` directory for constructor dependencies and insert the new dependencies into your project's `src/config/injection.yml` file, in the correct format.
+
